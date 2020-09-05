@@ -1,0 +1,114 @@
+# LAB: Creating Virtual Machines
+
+## Objectives:
+In this lab, you will learn how to perform the following tasks:
+	*Create several standard VMs
+	*Create advanced VMs
+
+### Objective One: Create several standard VMs
+Task 1: Create a utility virtual machine
+	gcloud compute instances create "my-vm1-28961c" --zone "us-central1-c" --machine-type "n1-standard-1" --image "debian-9-stretch-v20200805" --image-project "debian-cloud" --subnet "default"
+RESULT:
+	NAME           ZONE           MACHINE_TYPE   PREEMPTIBLE  INTERNAL_IP  EXTERNAL_IP  STATUS
+	my-vm1-28961c  us-central1-c  n1-standard-1               10.128.0.3   34.68.58.79  RUNNING
+
+Task 2: Create a Windows virtual machine
+	gcloud compute instances create "my-vm2-28961c" --zone "europe-west2-a" --machine-type "n1-standard-2" --tags "http-server" --tags "https-server" --image "windows-server-2016-dc-core-v20200813" --image-project "windows-cloud" --boot-disk-size "100GB" --boot-disk-type "pd-ssd" --subnet "default"
+
+	gcloud compute firewall-rules create default-allow-http --direction=INGRESS --action=ALLOW --rules=tcp:80 --source-ranges=0.0.0.0/0 --target-tags=http-server
+
+	gcloud compute firewall-rules create default-allow-https --direction=INGRESS --action=ALLOW --rules=tcp:443 --source-ranges=0.0.0.0/0 --target-tags=https-server
+
+Task 3: Setting Password on Windows server
+	gcloud compute reset-windows-password "E-2\>}1Iy,n*r_P" --zone "europe-west2-a"
+RESULT:
+	Would you like to set or reset the password for
+	[student_01_2e94b4592ac3] (Y/n)?  Y
+
+### Objective Two: Create advanced VMs
+Task 1: Create a custom virtual machine
+	gcloud compute instances create my-vm3-28961c --zone "us-west1-b" --machine-type "custom-6-32768" --image "debian-9-stretch-v20200805" --image-project "debian-cloud" --subnet "default"
+
+Task 2: Connect via SSH to the custom VM
+	gcloud compute ssh my-vm3-28961c
+RESULT:
+	This tool needs to create the directory
+	[/home/student_01_2e94b4592ac3/.ssh] before being able to generate SSH keys.
+	Do you want to continue (Y/n)?  Y 
+
+-Steps in SSH:
+1. To see infomation about used and unused memory 
+	free
+result:
+              total        used        free      shared  buff/cache   available
+Mem:       32951664      148756    32690704       11004      112204    32475364
+Swap:             0           0           0
+
+2. to see details about RAM installed on the VM
+	sudo dmidecode -t 17
+RESULT:
+	# dmidecode 3.0
+	Getting SMBIOS data from sysfs.
+	SMBIOS 2.4 present.
+	Handle 0x7000, DMI type 17, 21 bytes
+	Memory Device
+        	Array Handle: 0x0200
+        	Error Information Handle: Not Provided
+        	Total Width: 64 bits
+        	Data Width: 64 bits
+        	Size: 16384 MB
+        	Form Factor: DIMM
+        	Set: None
+        	Locator: DIMM 0
+       		Bank Locator: Not Specified
+        	Type: RAM
+        	Type Detail: Synchronous
+	Handle 0x7001, DMI type 17, 21 bytes
+	Memory Device
+        	Array Handle: 0x0200
+        	Error Information Handle: Not Provided
+        	Total Width: 64 bits
+        	Data Width: 64 bits
+        	Size: 16384 MB
+        	Form Factor: DIMM
+       		Set: None
+        	Locator: DIMM 1
+        	Bank Locator: Not Specified
+        	Type: RAM
+        	Type Detail: Synchronous
+
+3. To verify number of processors
+	nproc
+RESULT: 6
+
+4. To see details about cpus installed on your vm
+	lscpu
+RESULT:
+	Architecture:          x86_64
+	CPU op-mode(s):        32-bit, 64-bit
+	Byte Order:            Little Endian
+	CPU(s):                6
+	On-line CPU(s) list:   0-5
+	Thread(s) per core:    2
+	Core(s) per socket:    3
+	Socket(s):             1
+	NUMA node(s):          1
+	Vendor ID:             GenuineIntel
+	CPU family:            6
+	Model:                 79
+	Model name:            Intel(R) Xeon(R) CPU @ 2.20GHz
+	Stepping:              0
+	CPU MHz:               2200.220
+	BogoMIPS:              4400.44
+	Hypervisor vendor:     KVM
+	Virtualization type:   full
+	L1d cache:             32K
+	L1i cache:             32K
+	L2 cache:              256K
+	L3 cache:              56320K
+	NUMA node0 CPU(s):     0-5
+	Flags:                 fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology nonstop_tsc pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt aes xsave avx f16c rdran
+d hypervisor lahf_lm abm 3dnowprefetch invpcid_single ssbd ibrs ibpb stibp kaiser fsgsbae tsc_adjust bmi1 hle avx2 smep bmi2 ers invpcid rtm rdseed adx smap xsaveopt arat md_clear arch_capabilities
+
+5. To exit ssh terminal
+	exit

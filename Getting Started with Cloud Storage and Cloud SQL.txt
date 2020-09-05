@@ -1,0 +1,127 @@
+#LAB: Google Cloud Fundamentals: Getting Started with Cloud Storage and Cloud SQL
+
+## Objectives:
+In this lab, you will learn how to perform the following tasks:
+	*Create a Cloud Storage bucket and place an image into it
+	*Create a Cloud SQL instance and configure it
+	*Connect to the Cloud SQL instance from a web server
+	*Use the image in the Cloud Storage bucket on a web page
+
+### Objective One: Create a Cloud Storage bucket and place an image into it
+-Steps:
+1. Deploy a web server VM instance
+	gcloud compute instances create bloghost --zone "us-central1-a" --machine-type "e2-medium" --metadata=startup-script=apt-get\ update$'\n'apt-get\ install\ apache2\ php\ php-mysql\ -y$'\n'service\ apache2\ restart --image "debian-9-stretch-v20200805" --image-project "debian-cloud" --tags "http-server" 
+	
+	gcloud compute firewall-rules create default-allow-http --direction=INGRESS --action=ALLOW --rules=tcp:80 --source-ranges=0.0.0.0/0 --target-tags=http-server
+
+2. Create a Cloud Storage bucket using the gsutil command line
+	-To enter location into an environment variable "LOCATION"
+		export LOCATION=US
+	-To create a bucket named after your project ID "qwiklabs-gcp-03-e3ed02e7ab3a", note that DEVSHELL_PROJECT_ID environment variable contains your project ID.
+		gsutil mb -l $LOCATION gs://$DEVSHELL_PROJECT_ID
+	-Retrieve an image "my-excellent-blog.png" from a Cloud storage location that is publicly accessible
+		gsutil cp gs://cloud-training/gcpfci/my-excellent-blog.png my-excellent-blog.png
+	RESULT:
+		Copying gs://cloud-training/gcpfci/my-excellent-blog.png...
+		/ [1 files][  8.2 KiB/  8.2 KiB]
+		Operation completed over 1 objects/8.2 KiB.
+
+	-Copy image "my-excellent-blog.png" to the Cloud Storage bucket recently created
+		gsutil cp my-excellent-blog.png gs://$DEVSHELL_PROJECT_ID/my-excellent-blog.png
+	RESULT:
+		Copying file://my-excellent-blog.png [Content-Type=image/png]...
+		/ [1 files][  8.2 KiB/  8.2 KiB]
+		Operation completed over 1 objects/8.2 KiB.
+	-Modify Access Control List of the object created in the bucket, such that it is readable by everyone
+		gsutil acl ch -u allUsers:R gs://$DEVSHELL_PROJECT_ID/my-excellent-blog.png
+	RESULT:
+		Updated ACL on gs://qwiklabs-gcp-03-e3ed02e7ab3a/my-excellent-blog.png
+
+### Objective Two: Create a Cloud SQL instance and configure it
+Task 1: Create Cloud SQL instance and set root password 
+	gcloud sql instances create blog-db --tier=db-n1-standard-1 --region=us-central1 --root-password=mypassword
+RESULT:
+	Created [https://sqladmin.googleapis.com/sql/v1beta4/projects/qwiklabs-gcp-03-e3ed02e7ab3a/instances/blog-db].
+	NAME     DATABASE_VERSION  LOCATION       TIER              PRIMARY_ADDRESS  PRIVATE_ADDRESS  STATUS
+	blog-db  MYSQL_5_7         us-central1-a  db-n1-standard-1  35.222.29.214   -                RUNNABLE
+Note: The public IP address is also the PRIMARY ADDRESS stated above
+
+Task 2: Add a User account, a host address and password
+	
+	gcloud sql users create blogdbuser --host=35.222.29.214/32 --instance=blog-db --password=password123
+
+
+
+### Objective Three: Connect to the Cloud SQL instance from a web server
+Task1: Configure an application in a compute engine instance to use Cloud SQL
+-Steps:
+1. Connect via SSH to bloghost VM
+	gcloud compute ssh bloghost
+2. In SSH session on bloghost, change working directory to the document root of the web server 
+	cd /var/www/html
+3. Use nano text editor to edit "index.php" file
+	sudo nano index.php
+4. Insert the code below in the "index.php" file
+	<html>
+	<head><title>Welcome to my excellent blog</title></head>
+	<body>
+	<h1>Welcome to my excellent blog</h1>
+	<?php
+	 $dbserver = "CLOUDSQLIP";
+	$dbuser = "blogdbuser";
+	$dbpassword = "DBPASSWORD";
+	// In a production blog, we would not store the MySQL
+	// password in the document root. Instead, we would store it in a
+	/ configuration file elsewhere on the web server VM instance.
+
+	$conn = new mysqli($dbserver, $dbuser, $dbpassword);
+
+	if (mysqli_connect_error()) {
+        	echo ("Database connection failed: " . mysqli_connect_error());
+	} else {
+        	echo ("Database connection succeeded.");
+	}
+	?>
+	</body></html>
+5. To save the edited "index.php" file, press Ctrl+O and then "Enter" 
+6. To exit nano text editor, press Ctrl+X
+7. Restart the web server on cloud shell
+	sudo service apache2 restart
+8. Copy the bloghost VM instance external IP address "35.222.29.214" and paste in a new browser tab, followed by /index.php
+	35.222.29.214/index.php
+RESULT: Database connection failed: ...
+Note: This message displayed above occurred because the php's connection has not been configured to the Cloud SQL instance "blog-db"
+9. Return to ssh session on bloghost
+	sudo nano index.php
+10. In nano text editor, replace "CLOUDSQLIP" with "35.222.29.214"
+11. replace "DBPASSWORD" with the "password" and repeat step 5-7
+12. Return to the browser tab with the address "35.222.29.214/index.php"
+RESULT: Database connection succeeded.
+
+### Objective Four: Use the image in the Cloud Storage bucket on a web page
+-Steps:
+1. To list the object in the "blog-db"  Cloud Storage bucket
+	gsutil ls
+RESULT:
+	gs://qwiklabs-gcp-03-2cd6cd1a0eed/
+
+2. Return SSH session on bloghost VM instance, you can using
+	gcloud compute ssh bloghost
+3. Change working directory to the document root of the web server
+	cd /var/www/html
+4. Edit "index.php" using nano text editor
+	sudo nano index.php
+5. Navigate the cursor to create a blank line above h1 element, using the arrow keys
+6. Enter <img src='https://storage.googleapis.com/qwiklabs-gcp-03-2cd6cd1a0eed/my-excellent-blog.png'/>
+7. To save the edited "index.php" file, press Ctrl+O and then "Enter" 
+8. To exit nano text editor, press Ctrl+X
+9. Restart the web server on cloud shell
+	sudo service apache2 restart
+10. Return to the browser tab with the address "35.222.29.214/index.php", it should show the banner image on the page when you load the page.
+
+
+
+
+
+
+		

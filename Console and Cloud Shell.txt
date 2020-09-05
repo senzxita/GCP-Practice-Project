@@ -1,0 +1,98 @@
+# LAB: Console and Cloud Shell
+
+## Objectives:
+In this lab, you will learn how to perform the following tasks:
+	* Get access to Google Cloud.
+	* Create a Cloud Storage bucket using the Cloud Console.
+	* Create a Cloud Storage bucket using Cloud Shell.
+	* Become familiar with Cloud Shell features.
+
+### Objective One : Get access to Google Cloud
+-Steps:
+
+1. Sign in to Qwiklabs, take note of the lab's access time and ensure you finish within the stipulated period.  
+2. Click "Start Lab". 
+3. Click "Open Google Console".
+4. Enter the lab credentials provided to sign in to Cloud Platform Console.
+5. Accept the terms and skip recovery resource page.
+
+Note: Do not click "End Lab" until you are done working on the lab or you want to restart the lab. Restarting the lab clears your work and remove the project.
+Another lab credentials are generated when you repeat Step 1.
+
+
+### Objective Two: Create a Cloud Storage bucket using the Cloud Console
+Note: This is the translation of Cloud Console instructions to 100% command line instructions.
+
+-Steps:
+1. Open Cloud shell, create your first bucket using 'gsutil' command.
+	gsutil mb gs://my_first_bucket_3ca8c
+2. To verify 'my_first_bucket' has been created, enter the gsutil ls, to list the buckets in a project.
+	gsutil ls
+RESULT:
+	gs://my_first_bucket_3ca8c/
+
+### Objective Three: Create a Cloud Storage bucket using Cloud Shell
+-Steps:
+
+1. Open Cloud shell, create your second bucket.
+	gsutil mb gs://my_second_bucket_3ca8c
+2. Verify 'my_second_bucket' has been created.
+	gsutil ls
+RESULT:
+	gs://my_first_bucket_3ca8c/
+	gs://my_second_bucket_3ca8c/
+
+### Objective Four: Become familiar with Cloud Shell features
+Task 1: Upload a File
+-Steps:
+1. Click on the three dots icon that is aligned vertically, in the Cloud Shell toolbal
+2. Options are being displayed, select "Upload File"
+3. Upload any file from your local machine to Cloud Shell.
+4. To confirm the file was uploaded, type 'ls' in Cloud Shell
+	ls
+RESULT:
+	logo.PNG  README-cloudshell.txt
+
+5.Copy the file uploaded into my_first_bucket
+	gsutil cp 'logo.PNG' gs://my_first_bucket_3ca8c 
+
+Task 2: Create a persistent state in Cloud Shell
+-Steps:
+1. Create an environment variable and place it in a region
+	INFRACLASS_REGION=us-central1
+2. Verify the environment variable is in your chosen region
+	echo $INFRACLASS_REGION
+RESULT:
+	us-central1
+3. Create a subdirectory
+	mkdir infraclass
+4. Create 'config' file in the infraclass directory
+	touch infraclass/config
+5. Add us-central1 to 'config' file
+	echo INFRACLASS_REGION=$INFRACLASS_REGION >> ~/infraclass/config
+6.Create a second environment variable for your project 'qwiklabs-gcp-01-3ca8c0398cc1'
+	INFRACLASS_PROJECT_ID=qwiklabs-gcp-01-3ca8c0398cc1
+7. Add qwiklabs-gcp-01-3ca8c0398cc1 to the 'config' file.
+	echo INFRACLASS_PROJECT_ID=$INFRACLASS_PROJECT_ID >> ~/infraclass/config
+8. Use source command to set the environment variables
+	source infraclass/config
+9. Use echo command to verify the project variable was set
+	echo $INFRACLASS_PROJECT_ID
+RESULT: 
+	qwiklabs-gcp-01-3ca8c0398cc1
+
+Task 3: Modify The bash profile and create persistence
+-Steps
+1. Edit the shell profile, enter nano command
+	nano .profile
+2. Add source command to the end of the file in nano
+	source infraclass/config
+3. Enter Ctrl+O, Enter to save the file
+4. Enter Ctrl+X to exit nano
+5. Close and reopen Cloud Shell 
+6. Use echo command to verify the variable is still set
+	echo $INFRACLASS_PROJECT_ID
+RESULT:
+	qwiklabs-gcp-01-3ca8c0398cc1
+7. Enter 'exit' command to close Cloud Shell
+	exit
